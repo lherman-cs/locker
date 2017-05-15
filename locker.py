@@ -68,18 +68,23 @@ class Decryptor(Locker):
 
     def decrypt(self, path):
         print('Decrypting {}...'.format(path))
-        f = Fernet(self.key)
-        try:
-            with open(path, 'rb') as i:
-                with open(path.replace(self.encrypted_ext, ''), 'wb') as o:
-                    try:
-                        o.write(f.decrypt(i.read()))
-                        remove(path)
-                    except InvalidToken:
-                        remove(path.replace(self.encrypted_ext, ''))
-                        print('Incorrect password for {}'.format(path))
-        except FileNotFoundError:
-            print('No such file or directory: {}'.format(path))
+        if path.endswith(self.encrypted_ext):
+            f = Fernet(self.key)
+            try:
+                with open(path, 'rb') as i:
+                    with open(path.replace(self.encrypted_ext, ''), 'wb') as o:
+                        try:
+                            o.write(f.decrypt(i.read()))
+                        except InvalidToken:
+                            remove(path.replace(self.encrypted_ext, ''))
+                            print('Incorrect password for {}'.format(path))
+                        else:
+                            remove(path)
+
+            except FileNotFoundError:
+                print('No such file or directory: {}'.format(path))
+        else:
+            print("{} is not an encrypted file".format(path))
 
     def start(self):
         decrypt = self.decrypt
