@@ -1,3 +1,5 @@
+#!/home/lukas/Tester/Python/locker/env/bin/python3
+
 from locker import Encryptor, Decryptor
 from argparse import ArgumentParser
 from getpass import getpass
@@ -5,7 +7,7 @@ from getpass import getpass
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument('file', type=str)
+    parser.add_argument('files', nargs='+')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-e', action='store_true')
     group.add_argument('-d', action='store_true')
@@ -14,10 +16,10 @@ def main():
     password = getpass()
 
     if args.e:
-        encryptor = Encryptor(args.file, password)
+        encryptor = Encryptor(args.files, password)
         encryptor.start()
     else:
-        decryptor = Decryptor(args.file, password)
+        decryptor = Decryptor(args.files, password)
         decryptor.start()
 
 
