@@ -4,4 +4,5 @@
 DEPENDENCIES=(build-essential libssl-dev libffi-dev python3-dev)
 
 sudo apt-get install ${DEPENDENCIES[@]}
+virtualenv -p $(which python3) env
 pip3 install -r requirements.txt
