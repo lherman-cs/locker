@@ -1,7 +1,7 @@
-import tarfile
 import base64
-import os
-import shutil
+from os import walk, remove, cpu_count
+from os.path import join, isdir
+from multiprocessing import Pool
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -10,11 +10,11 @@ from cryptography.fernet import InvalidToken
 
 
 class Locker:
-    compression_ext = '.tar.gz'
+    encrypted_ext = '.dat'
     salt = b'\xab@r\x8a\\\xbb\xff\xde\xbf\xb3\x816\xe9\xf2\xf4C'
 
-    def __init__(self, file_name, password):
-        self.file_name = file_name
+    def __init__(self, filename, password):
+        self.filename = filename
         self.password = password
 
     @property
@@ -28,51 +28,59 @@ class Locker:
         )
         return base64.urlsafe_b64encode(kdf.derive(self.password.encode()))
 
-    def compress(self):
-        print("Compressing {}...".format(self.file_name))
-        with tarfile.open(self.file_name + self.compression_ext, 'w:gz') as o:
-            o.add(self.file_name)
-
-    def extract(self):
-        with tarfile.open(self.file_name + self.compression_ext, 'r:gz') as i:
-            i.extractall()
+    @property
+    def paths(self):
+        if isdir(self.filename):
+            for dirpath, dirnames, filenames in walk(self.filename):
+                for filename in filenames:
+                    yield join(dirpath, filename)
+        else:
+            yield self.filename
 
 
 class Encryptor(Locker):
-    def __init__(self, file_name, password):
-        super().__init__(file_name, password)
+    def __init__(self, filename, password):
+        super().__init__(filename, password)
 
-    def encrypt(self):
-        self.compress()
-        print('Encrypting {}...'.format(self.file_name))
-
-        if os.path.isdir(self.file_name):
-            shutil.rmtree(self.file_name)
-        else:
-            os.remove(self.file_name)
-
+    def encrypt(self, path):
+        print('Encrypting {}...'.format(path))
         f = Fernet(self.key)
-        with open(self.file_name + self.compression_ext, 'rb') as i:
-            with open(self.file_name, 'wb') as o:
-                o.write(f.encrypt(i.read()))
+        try:
+            with open(path, 'rb') as i:
+                with open(path + self.encrypted_ext, 'wb') as o:
+                    o.write(f.encrypt(i.read()))
+                    remove(path)
+        except FileNotFoundError:
+            print('No such file or directory: {}'.format(path))
 
-        os.remove(self.file_name + self.compression_ext)
+    def start(self):
+        encrypt = self.encrypt
+        paths = self.paths
+        p = Pool(cpu_count())
+        p.map(encrypt, paths)
 
 
 class Decryptor(Locker):
-    def __init__(self, file_name, password):
-        super().__init__(file_name, password)
+    def __init__(self, filename, password):
+        super().__init__(filename, password)
 
-    def decrypt(self):
-        print('Decrypting {}...'.format(self.file_name))
-
+    def decrypt(self, path):
+        print('Decrypting {}...'.format(path))
         f = Fernet(self.key)
-        with open(self.file_name, 'rb') as i:
-            with open(self.file_name + self.compression_ext, 'wb') as o:
-                try:
-                    o.write(f.decrypt(i.read()))
-                    self.extract()
-                except InvalidToken:
-                    print('Wrong password')
-                finally:
-                    os.remove(self.file_name + self.compression_ext)
+        try:
+            with open(path, 'rb') as i:
+                with open(path.replace(self.encrypted_ext, ''), 'wb') as o:
+                    try:
+                        o.write(f.decrypt(i.read()))
+                        remove(path)
+                    except InvalidToken:
+                        remove(path.replace(self.encrypted_ext, ''))
+                        print('Incorrect password for {}'.format(path))
+        except FileNotFoundError:
+            print('No such file or directory: {}'.format(path))
+
+    def start(self):
+        decrypt = self.decrypt
+        paths = self.paths
+        p = Pool(cpu_count())
+        p.map(decrypt, paths)

@@ -1,5 +1,3 @@
-#!/home/lukas/Tester/Python/locker/env/bin/python3
-
 from locker import Encryptor, Decryptor
 from argparse import ArgumentParser
 from getpass import getpass
@@ -17,10 +15,10 @@ def main():
 
     if args.e:
         encryptor = Encryptor(args.file, password)
-        encryptor.encrypt()
+        encryptor.start()
     else:
         decryptor = Decryptor(args.file, password)
-        decryptor.decrypt()
+        decryptor.start()
 
 
 if __name__ == '__main__':
