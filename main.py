@@ -5,6 +5,25 @@ from argparse import ArgumentParser
 from getpass import getpass
 
 
+def ask_password(register=True):
+    '''
+    Ask the user to give a password. If 'register' is true, then it will verify the
+    given password and recursively ask the user again if it doesn't match.
+    Otherwise, if 'register' is false, then it will just return the given 
+    password.
+    '''
+    password = getpass()
+
+    if register:
+        verify_password = getpass('Confirm Password: ')
+        if password != verify_password:
+            print()
+            print("The password doesn't match. Please try again.")
+            return ask_password()
+    print('Accepted!')
+    return password
+
+
 def main():
     parser = ArgumentParser()
     parser.add_argument('files', nargs='+')
@@ -13,13 +32,11 @@ def main():
     group.add_argument('-d', action='store_true')
     args = parser.parse_args()
 
-    password = getpass()
-
     if args.e:
-        encryptor = Encryptor(args.files, password)
+        encryptor = Encryptor(args.files, ask_password(register=True))
         encryptor.start()
     else:
-        decryptor = Decryptor(args.files, password)
+        decryptor = Decryptor(args.files, ask_password(register=False))
         decryptor.start()
 
 

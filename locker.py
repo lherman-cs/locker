@@ -10,6 +10,10 @@ from cryptography.fernet import InvalidToken
 
 
 class Locker:
+    '''
+    This is just a base class. You should not use this directly. Instead, use
+    Encryptor or Decryptor class.
+    '''
     encrypted_ext = '.dat'
     salt = b'\xab@r\x8a\\\xbb\xff\xde\xbf\xb3\x816\xe9\xf2\xf4C'
 
@@ -41,10 +45,18 @@ class Locker:
 
 
 class Encryptor(Locker):
+    '''
+    'files': List of files which will be encrypted. 
+    'password': A string.
+    '''
+
     def __init__(self, files, password):
         super().__init__(files, password)
 
     def encrypt(self, path):
+        '''
+        Encrypt a single file.
+        '''
         print('Encrypting {}...'.format(path))
         f = Fernet(self.key)
         try:
@@ -56,6 +68,10 @@ class Encryptor(Locker):
             print('No such file or directory: {}'.format(path))
 
     def start(self):
+        '''
+        Using map which has 'encrypt' function as the function parameter to
+        encrypt all the files.
+        '''
         encrypt = self.encrypt
         paths = self.paths
         p = Pool(cpu_count())
@@ -63,10 +79,18 @@ class Encryptor(Locker):
 
 
 class Decryptor(Locker):
+    '''
+    'files': List of files which will be decrypted. 
+    'password': A string.
+    '''
+
     def __init__(self, files, password):
         super().__init__(files, password)
 
     def decrypt(self, path):
+        '''
+        Decrypt a single file.
+        '''
         print('Decrypting {}...'.format(path))
         if path.endswith(self.encrypted_ext):
             f = Fernet(self.key)
@@ -87,6 +111,10 @@ class Decryptor(Locker):
             print("{} is not an encrypted file".format(path))
 
     def start(self):
+        '''
+        Using map which has 'decrypt' function as the function parameter to
+        decrypt all the files.
+        '''
         decrypt = self.decrypt
         paths = self.paths
         p = Pool(cpu_count())
