@@ -1,5 +1,3 @@
-#!/home/lukas/Tester/Python/locker/env/bin/python3
-
 from locker import Encryptor, Decryptor
 from argparse import ArgumentParser
 from getpass import getpass
