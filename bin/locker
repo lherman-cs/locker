@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/home/lukas/Tester/Python/locker/bin/env/bin/python3 /home/lukas/Tester/Python/locker/bin/main.py $@

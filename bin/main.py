@@ -1,3 +1,7 @@
+from os.path import dirname, join
+import sys
+sys.path.insert(1, join(dirname(sys.path[0]), 'locker'))
+
 from locker import Encryptor, Decryptor
 from argparse import ArgumentParser
 from getpass import getpass

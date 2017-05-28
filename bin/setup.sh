@@ -1,12 +1,14 @@
 #!/bin/bash
 
+BASE_DIR=$(cd .. && pwd)
+
 # Only support debian systems
 DEPENDENCIES=(build-essential libssl-dev libffi-dev python3-dev)
 
 sudo apt-get install ${DEPENDENCIES[@]}
 python3 -m venv env
 source env/bin/activate
-pip3 install -r requirements.txt
+pip3 install -r ${BASE_DIR}/requirements.txt
 
 echo "Exporting path to ${HOME}/.bashrc"
 echo "export PATH=\$PATH:$(pwd)" >> ${HOME}/.bashrc
